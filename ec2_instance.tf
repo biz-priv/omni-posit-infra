@@ -115,6 +115,13 @@ resource "aws_lb" "new-lb-using-terraform" {
   subnets                    = [aws_subnet.subnet-using-terraform.id, aws_subnet.subnet-using-terraform2.id]
 }
 
+resource "aws_lb_target_group" "new-tg-using-terraform" {
+  name     = "new-tg-using-terraform"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.vpc-using-terraform.id
+}
+
 resource "aws_security_group" "new-sg-using-terraform" {
   name        = "new-sg-using-terraform"
   description = "Allows traffic from corporate IPs and VPN"
