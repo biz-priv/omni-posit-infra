@@ -12,11 +12,24 @@ variable "allowed_ips" {
 resource "aws_instance" "example_instance_from_terraform" {
   ami           = "ami-041feb57c611358bd"
   instance_type = "t2.micro"
-  subnet_id     = aws_subnet.subnet-using-terraform.id
+  subnet_id     = aws_subnet.subnet-using-terraform2.id
   vpc_security_group_ids = [aws_security_group.new-sg-using-terraform.id]
+  associate_public_ip_address = true
 
   tags = {
     Name = "ExampleInstanceFromTerraform"
+  }
+}
+
+resource "aws_instance" "new_posit_instance_from_terraform" {
+  ami           = var.ami_id
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.subnet-using-terraform.id
+  vpc_security_group_ids = [aws_security_group.new-sg-using-terraform.id]
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "PositAMIInstance"
   }
 }
 
@@ -25,7 +38,14 @@ resource "aws_route53_record" "subdomain" {
   name    = var.subdomain_name
   type    = var.record_type
   ttl     = var.ttl
-  records = [aws_instance.example_instance_from_terraform.private_ip]
+  records = [aws_instance.example_instance_from_terraform.public_ip, aws_instance.new_posit_instance_from_terraform.public_ip]
+
+  # alias {
+  #   name                   = aws_lb.new-lb-using-terraform.dns_name
+  #   zone_id                = aws_lb.new-lb-using-terraform.zone_id
+  #   evaluate_target_health = false
+  # }
+  # records = [aws_instance.example_instance_from_terraform.public_ip, aws_lb.new-lb-using-terraform.dns_name]
 }
 
 resource "aws_acm_certificate" "cert-using-terraform" {
@@ -59,6 +79,24 @@ resource "aws_acm_certificate_validation" "validated_cert_using_terraform" {
   validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
 }
 
+# resource "aws_lb_listener" "https_listener_using_terraform" {
+#   load_balancer_arn = aws_lb.new-lb-using-terraform.arn
+#   port              = 443
+#   protocol          = "HTTPS"
+#   ssl_policy        = var.ssl_policy
+#   certificate_arn   = aws_acm_certificate_validation.validated_cert_using_terraform.certificate_arn
+  
+#   default_action {
+#     type = "fixed-response"
+    
+#     fixed_response {
+#       content_type = "text/plain"
+#       message_body = "OK"
+#       status_code  = "200"
+#     }
+#   }
+# }
+
 resource "aws_lb_listener" "https_listener_using_terraform" {
   load_balancer_arn = aws_lb.new-lb-using-terraform.arn
   port              = 443
@@ -67,15 +105,11 @@ resource "aws_lb_listener" "https_listener_using_terraform" {
   certificate_arn   = aws_acm_certificate_validation.validated_cert_using_terraform.certificate_arn
   
   default_action {
-    type = "fixed-response"
-    
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "OK"
-      status_code  = "200"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.new-tg-using-terraform.arn
   }
 }
+
 
 resource "aws_internet_gateway" "igw-using-terraform" {
   vpc_id = aws_vpc.vpc-using-terraform.id 
@@ -125,6 +159,11 @@ resource "aws_lb_target_group" "new-tg-using-terraform" {
   port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.vpc-using-terraform.id
+}
+
+resource "aws_lb_target_group_attachment" "attach_instance_to_tg" {
+  target_group_arn = aws_lb_target_group.new-tg-using-terraform.arn
+  target_id        = aws_instance.new_posit_instance_from_terraform.id
 }
 
 resource "aws_security_group" "new-sg-using-terraform" {
