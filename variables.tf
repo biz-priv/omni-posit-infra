@@ -18,13 +18,13 @@ variable "route53_zone_id" {
   type        = string
 }
 
-# variable "ami_id" {
-#   type        = string
-#   description = "The ID of the AMI to share"
-#   default     = "ami-0557a15b87f6559cf"
-# }
+variable "ami_id" {
+  type        = string
+  description = "The ID of the AMI to share"
+  default     = "ami-0557a15b87f6559cf"
+}
 
-# variable "target_account_id" {
-#   type        = string
-#   description = "The AWS account ID to which to share the AMI" 
-# }
+variable "target_account_id" {
+  type        = string
+  description = "The AWS account ID to which to share the AMI" 
+}

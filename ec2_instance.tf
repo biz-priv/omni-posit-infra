@@ -4,6 +4,11 @@ variable "allowed_ips" {
   default     = ["203.0.113.0/32", "203.0.114.0/32"]  # Example IPs, replace with actual corporate and VPN IPs
 }
 
+# resource "aws_ami_launch_permission" "ami_share_from_terraform" {
+#   image_id      = var.ami_id
+#   account_id    = var.target_account_id
+# }
+
 resource "aws_instance" "example_instance_from_terraform" {
   ami           = "ami-041feb57c611358bd"
   instance_type = "t2.micro"
