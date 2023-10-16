@@ -89,6 +89,12 @@ variable "lb_type" {
   description = "Load balancer type"
 }
 
+variable "example_ami_id" {
+  type        = string
+  description = "Example ami id for testing"
+}
+
+
 
 
 

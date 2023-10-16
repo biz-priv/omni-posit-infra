@@ -10,7 +10,7 @@ variable "allowed_ips" {
 # }
 
 resource "aws_instance" "example_instance_from_terraform" {
-  ami           = "ami-041feb57c611358bd"
+  ami           = var.example_ami_id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.subnet-using-terraform2.id
   vpc_security_group_ids = [aws_security_group.new-sg-using-terraform.id]
@@ -163,7 +163,8 @@ resource "aws_lb_target_group" "new-tg-using-terraform" {
 
 resource "aws_lb_target_group_attachment" "attach_instance_to_tg" {
   target_group_arn = aws_lb_target_group.new-tg-using-terraform.arn
-  target_id        = aws_instance.new_posit_instance_from_terraform.id
+  # target_id        = aws_instance.new_posit_instance_from_terraform.id
+  target_id        = aws_instance.example_instance_from_terraform.id
 }
 
 resource "aws_security_group" "new-sg-using-terraform" {
