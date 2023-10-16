@@ -1,7 +1,7 @@
 variable "allowed_ips" {
   description = "IP CIDR blocks that are allowed access to the resources"
   type        = list(string)
-  default     = ["203.0.113.0/32", "203.0.114.0/32"]  # Example IPs, replace with actual corporate and VPN IPs
+  default     = ["203.0.113.0/32", "203.0.114.0/32"]  # Have to be replaced with actual corporate and VPN IPs
 }
 
 # resource "aws_ami_launch_permission" "ami_share_from_terraform" {
@@ -22,15 +22,15 @@ resource "aws_instance" "example_instance_from_terraform" {
 
 resource "aws_route53_record" "subdomain" {
   zone_id = var.route53_zone_id 
-  name    = "posittest"
-  type    = "A"
-  ttl     = "300"
+  name    = var.subdomain_name
+  type    = var.record_type
+  ttl     = var.ttl
   records = [aws_instance.example_instance_from_terraform.private_ip]
 }
 
 resource "aws_acm_certificate" "cert-using-terraform" {
   domain_name       = var.domain_name
-  validation_method = "DNS"
+  validation_method = var.acm_validation_method
 
   tags = {
     Name = "PositAcmCertificate"
@@ -63,7 +63,7 @@ resource "aws_lb_listener" "https_listener_using_terraform" {
   load_balancer_arn = aws_lb.new-lb-using-terraform.arn
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  ssl_policy        = var.ssl_policy
   certificate_arn   = aws_acm_certificate_validation.validated_cert_using_terraform.certificate_arn
   
   default_action {
@@ -85,25 +85,25 @@ resource "aws_route_table" "route-table-using-terraform" {
   vpc_id = aws_vpc.vpc-using-terraform.id  
   
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = var.igw_cidr_block
     gateway_id = aws_internet_gateway.igw-using-terraform.id
   }
 }
 
 resource "aws_vpc" "vpc-using-terraform" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.vpc_cidr_block
 }
 
 resource "aws_subnet" "subnet-using-terraform" {
   vpc_id            = aws_vpc.vpc-using-terraform.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-1a"
+  cidr_block        = var.first_subnet_cidr_block
+  availability_zone = var.first_subnet_az
 }
 
 resource "aws_subnet" "subnet-using-terraform2" {
   vpc_id            = aws_vpc.vpc-using-terraform.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "us-east-1b"
+  cidr_block        = var.second_subnet_cidr_block
+  availability_zone = var.second_subnet_az
 }
 
 resource "aws_route_table_association" "route-table-association-using-terraform" {
@@ -114,7 +114,7 @@ resource "aws_route_table_association" "route-table-association-using-terraform"
 resource "aws_lb" "new-lb-using-terraform" {
   name                       = "new-lb-using-terraform"
   internal                   = false
-  load_balancer_type         = "application"
+  load_balancer_type         = var.lb_type
   security_groups            = [aws_security_group.new-sg-using-terraform.id]
   enable_deletion_protection = false
   subnets                    = [aws_subnet.subnet-using-terraform.id, aws_subnet.subnet-using-terraform2.id]
@@ -143,6 +143,6 @@ resource "aws_security_group" "new-sg-using-terraform" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.igw_cidr_block]
   }
 }
