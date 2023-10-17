@@ -8,6 +8,10 @@ phases:
       - unzip terraform.zip
       - mv terraform /usr/local/bin/
       - terraform -version
+  pre_build:
+    commands:
+      - echo "Delete .terraform directory to prevent cached details"
+      - rm -rf .terraform
   build:
     commands:
       - echo "Running Terraform Init..."
