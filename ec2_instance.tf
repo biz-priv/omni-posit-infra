@@ -1,7 +1,7 @@
 variable "allowed_ips" {
   description = "IP CIDR blocks that are allowed access to the resources"
   type        = list(string)
-  default     = ["203.0.113.0/32", "203.0.114.0/32"]  # Have to be replaced with actual corporate and VPN IPs
+  default     = ["203.0.113.0/32", "203.0.114.0/32"]  # Have to be replaced with actual corporate and VPN IP
 }
 
 # resource "aws_ami_launch_permission" "ami_share_from_terraform" {
