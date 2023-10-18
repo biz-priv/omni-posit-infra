@@ -14,6 +14,7 @@ phases:
       - rm -rf .terraform
   build:
     commands:
+      - aws s3 ls 
       - echo "Running Terraform Init..."
       - terraform init
       - echo "Running Terraform Apply..."
